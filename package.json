@@ -1,0 +1,23 @@
+{
+  "name": "csv-database",
+  "version": "1.0.0",
+  "description": "A easier way to management csv file as database",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/crud.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seal-Nexus/csv-database.git"
+  },
+  "keywords": [
+    "csv",
+    "database"
+  ],
+  "author": "ZoneTwelve",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Seal-Nexus/csv-database/issues"
+  },
+  "homepage": "https://github.com/Seal-Nexus/csv-database#readme"
+}
