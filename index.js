@@ -7,12 +7,13 @@ const fs = require("fs");
 const csvdb = require("csv-database");
 
 function application( params ){
-  let { filePath, fileds, standDir, delimiter } = params;
+  let { fileName, filePath, fileds, standDir, delimiter } = params;
   // filed system config
   // NN = Not Null
   // PK = Primary Key
   // U  = Unique Key
   // AI = Auto Increment
+  this.fileName = fileName;
   this.delimiter = delimiter || ",";
   
   this.inputFileds = fileds;
@@ -23,7 +24,10 @@ function application( params ){
   this.filePath = filePath;
   this.dbs = new Object( ); // Path: new csv-dataase
 
-  this.write = Write;
+  this.read   =   ReadSingle;
+  this.write  =  Write;
+  this.update = Update;
+  this.delete = Delete;
 
   this.getdb = getdb;
   this.resolveDatabasePath = resolveDatabasePath;
@@ -34,8 +38,19 @@ function application( params ){
   }
 }
 
-function Read( ){
+async function Read( filter ){
+  let db = null;
+  
+}
 
+async function ReadSingle( filter ){
+  try{
+    let db = await this.getdb( filter );
+    let data = await db.read( filter );
+    return data;
+  }catch(e){
+    return { error:e.message };
+  }
 }
 
 async function Write( data ){
@@ -47,8 +62,7 @@ async function Write( data ){
     // vaild data checking 
     let dataCheckResult = dataChecking( filed, d );
     if(dataCheckResult !== true)
-      return dataCheckResult;
-    
+      return dataCheckResult; 
   }
 
   try{
@@ -58,28 +72,44 @@ async function Write( data ){
   }catch(e){
     return { error:e.message };
   }
+}
+
+async function Update( ){
 
 }
 
-function Update( ){
-
-}
-
-function Delete( ){
+async function Delete( ){
 
 }
 
 async function getdb( data ){
   let filePath = path.resolve(this.standDir, this.filePath);
+  let fileName = this.fileName;
   let dbPath = resolveDatabasePath( filePath, data );
+  let dbFile = path.resolve( dbPath, fileName );
   let fileds = this.filedKeys;
   let delimiter = this.delimiter;
-  let db = this.dbs[dbPath];
-  if( db === undefined ){
-    db = await csvdb( dbPath, fileds, delimiter );
-    this.dbs[dbPath] = db;
+  let db = this.dbs[dbFile];
+  try{
+    if( db === undefined ){
+      checkFilePath( dbFile );
+      // if( !fs.existsSync( dbPath ) )
+      //   fs.mkdirSync(dbPath, { recursive: true });
+  
+      db = await csvdb( dbPath, fileds, delimiter );
+      this.dbs[dbPath] = db;
+    }
+    return db;
+  }catch(e){
+    throw e;
   }
-  return db;
+}
+
+function checkFilePath( filePath ){
+  console.log( filePath );
+  // if( !fs.existsSync( filePath ) ){
+  //   fs.mkdirSync( filePath, { recursive: true } );
+  // }
 }
 
 // common functions

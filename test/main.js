@@ -4,7 +4,8 @@ const database = require("../index");
 
 let db = new database({
   //filePath: "$pid/$date/data.csv",
-  filePath: "hello/world/database.csv",
+  filePath: "$pid/$date",
+  fileName: "database.csv",
   standDir: path.resolve( __dirname, "database" ),
   fileds: [
     { name: "pid",  type: "string" },
