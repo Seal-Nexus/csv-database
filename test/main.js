@@ -15,11 +15,17 @@ let db = new database({
   ]
 });
 
-let res = db.write({
-  pid : "p001",
-  hr  : `${~~(Math.random()*30) + 70}`,
-  spo2: "99",
-  date: `${Number(new Date())}`,
-});
 
-console.log( res );
+async function main( ){
+  let res = await db.write({
+    pid : "p001",
+    hr  : `${~~(Math.random()*30) + 70}`,
+    spo2: "99",
+    date: `${Number(new Date())}`,
+  });
+  
+  console.log( res );
+}
+
+
+main( );
