@@ -4,7 +4,7 @@
   "description": "A easier way to management csv file as database",
   "main": "index.js",
   "scripts": {
-    "test": "node test/crud.js"
+    "test": "node test/main.js"
   },
   "repository": {
     "type": "git",
@@ -19,5 +19,11 @@
   "bugs": {
     "url": "https://github.com/Seal-Nexus/csv-database/issues"
   },
-  "homepage": "https://github.com/Seal-Nexus/csv-database#readme"
+  "homepage": "https://github.com/Seal-Nexus/csv-database#readme",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "csv-database": "^0.9.2"
+  }
 }
