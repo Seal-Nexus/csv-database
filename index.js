@@ -13,23 +13,25 @@ function application( params ){
   // PK = Primary Key
   // U  = Unique Key
   // AI = Auto Increment
-  this.fileName = fileName;
-  this.delimiter = delimiter || ",";
   
+  this.fileName    = fileName;
+  this.delimiter   = delimiter || ",";
+  this.filePattern = filePath.match(/\$[a-zA-Z0-9]+/g);
+
+  this.filedKeys   = fileds.map( v=>v.name );
+  this.fileds      = new Object();
   this.inputFileds = fileds;
-  this.filedKeys = fileds.map( v=>v.name );
-  this.fileds = new Object();
 
   this.standDir = standDir;
   this.filePath = filePath;
   this.dbs = new Object( ); // Path: new csv-dataase
 
-  this.read   = ReadSingle;
+  this.read   =   Read;
   this.write  =  Write;
   this.update = Update;
   this.delete = Delete;
 
-  this.getdb = getdb;
+  this.getdb  = getdb;
   this.resolveDatabasePath = resolveDatabasePath;
 
   // Init
@@ -38,9 +40,18 @@ function application( params ){
   }
 }
 
-async function Read( filter ){
+async function Read( data, filter ){
+  // data is only the fileds are needed.
+  let { filePattern } = this;
   let db = null;
-  
+  for( let key of filePattern ){
+    if( data[key.substr(1)] === undefined ){
+      return { error:"key is missing", key };
+    }
+  }
+
+  db = await this.getdb( data )
+  return await db.get( filter );;
 }
 
 async function ReadSingle( filter ){
@@ -49,28 +60,33 @@ async function ReadSingle( filter ){
     let data = await db.read( filter );
     return data;
   }catch(e){
-    return { error:e.message };
+    return { error:e };
   }
 }
 
 async function Write( data ){
+  let { filedKeys, fileds } = this;
   let db = null;
 
-  for(let key of this.filedKeys ){
-    let d = data[key];
-    let filed = this.fileds[key];
-    // vaild data checking 
-    let dataCheckResult = dataChecking( filed, d );
-    if(dataCheckResult !== true)
-      return dataCheckResult; 
-  }
-
   try{
+
+    for(let key of filedKeys ){
+      let d     =   data[key];
+      let filed = fileds[key];
+
+      // vaild data checking 
+      let dataCheckResult = dataChecking( filed, d );
+      if( dataCheckResult.error ){
+        return dataCheckResult;
+      }
+      data[key] = dataCheckResult.value;
+    }
+
     db = await this.getdb( data );
     await db.add( data );
     return { message:"ok" };
   }catch(e){
-    return { error:e.message };
+    return { error:e, message: e.message };
   }
 }
 
@@ -118,20 +134,19 @@ function checkFilePath( filePath ){
 
 // common functions
 
-function resolveDatabasePath( pattern, data ){
-  let filePath = pattern;
+function resolveDatabasePath( filePath, data ){
   for(let key in data){
     filePath = filePath.replace( `$${key}`, data[key] );
   }
   return filePath;
 }
 
-function dataChecking( filed, data ){
-  if( data === undefined ){
-    data = autofillValue( filed );
+function dataChecking( filed, value ){
+  if( value === undefined ){
+    value = autofillValue( filed );
   }
 
-  if( checkEmptyRule( filed ) === true && data === undefined ){
+  if( checkEmptyRule( filed ) === true && value === undefined ){
     return { error:"data is missing" };
   }
 
@@ -140,7 +155,7 @@ function dataChecking( filed, data ){
   //   return { error:"Type is not matching", key };
   // }
 
-  return true;
+  return { value };
 }
 
 function autofillValue( filed ){
