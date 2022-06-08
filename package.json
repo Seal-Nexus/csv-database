@@ -4,7 +4,8 @@
   "description": "A easier way to management csv file as database",
   "main": "index.js",
   "scripts": {
-    "test": "node test/main.js"
+    "test": "node test/main.js",
+    "clean": "rm -rf test/database/*"
   },
   "repository": {
     "type": "git",

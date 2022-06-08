@@ -24,7 +24,7 @@ function application( params ){
   this.filePath = filePath;
   this.dbs = new Object( ); // Path: new csv-dataase
 
-  this.read   =   ReadSingle;
+  this.read   = ReadSingle;
   this.write  =  Write;
   this.update = Update;
   this.delete = Delete;
@@ -92,12 +92,9 @@ async function getdb( data ){
   let db = this.dbs[dbFile];
   try{
     if( db === undefined ){
-      checkFilePath( dbFile );
-      // if( !fs.existsSync( dbPath ) )
-      //   fs.mkdirSync(dbPath, { recursive: true });
-  
-      db = await csvdb( dbPath, fileds, delimiter );
-      this.dbs[dbPath] = db;
+      checkFilePath( dbPath );
+      db = await csvdb( dbFile, fileds, delimiter );
+      this.dbs[dbFile] = db;
     }
     return db;
   }catch(e){
@@ -106,10 +103,17 @@ async function getdb( data ){
 }
 
 function checkFilePath( filePath ){
-  console.log( filePath );
-  // if( !fs.existsSync( filePath ) ){
-  //   fs.mkdirSync( filePath, { recursive: true } );
-  // }
+  // another issues:
+  // if the filePath is not start with /, it won't be treated as relative path
+
+  let paths = [ "/" ];
+  for( let p of filePath.split("/") ){
+    paths.push( p );
+    let _path = path.resolve( ...paths );
+    if( !fs.existsSync( _path ) ){
+      fs.mkdirSync( _path );
+    }
+  }
 }
 
 // common functions
