@@ -18,20 +18,22 @@ let db = new database({
 
 
 async function main( ){
-  let write_res = await db.write({
-    pid : "p001",
-    hr  : `${~~(Math.random()*30) + 70}`,
-    spo2: `${~~(Math.random()*5) + 95}`,
-    date: sample_date,
+  let pid  = "p001",
+      hr   = `${~~(Math.random()*30) + 70}`,
+      spo2 = `${~~(Math.random()*5) + 95}`,
+      date = sample_date;
+  let write_res = await db.write({ 
+    pid, hr, spo2, date
   });
 
-  let search_res = await db.read({
-    pid: "p001",
-    date: sample_date,
-  });
-  
   console.log( "[Write]", write_res );
+
+  let search_res = await db.read({ pid, date });
+  
   console.log( "[Read]", search_res );
+
+  let search_res_missing_key = await db.read({ pid });
+
 }
 
 

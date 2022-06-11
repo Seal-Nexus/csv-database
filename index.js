@@ -17,9 +17,10 @@ function application( params ){
   this.fileName    = fileName;
   this.delimiter   = delimiter || ",";
   this.filePattern = filePath.match(/\$[a-zA-Z0-9]+/g);
+  this.indexed     = new Object( );
 
   this.filedKeys   = fileds.map( v=>v.name );
-  this.fileds      = new Object();
+  this.fileds      = new Object( );
   this.inputFileds = fileds;
 
   this.standDir = standDir;
@@ -44,24 +45,32 @@ async function Read( data, filter ){
   // data is only the fileds are needed.
   let { filePattern } = this;
   let db = null;
+  let missingKeys = new Array( );
+  for( let key of filePattern ){
+    if( data[key.substr(1)] === undefined ){
+      missingKeys.push( key );
+    }
+  }
+  
+  if( missingKeys.length > 0 ){
+    return {error: "missing key", key: missingKeys};
+  }
+
+  db = await this.getdb( data );
+  return await db.get( filter );
+}
+
+async function ReadMultiple( data, filter ){
+  let { filePattern } = this;
+  let db = null;
   for( let key of filePattern ){
     if( data[key.substr(1)] === undefined ){
       return { error:"key is missing", key };
     }
   }
 
-  db = await this.getdb( data )
-  return await db.get( filter );;
-}
-
-async function ReadSingle( filter ){
-  try{
-    let db = await this.getdb( filter );
-    let data = await db.read( filter );
-    return data;
-  }catch(e){
-    return { error:e };
-  }
+  db = await this.getdb( data );
+  return await db.get( filter );
 }
 
 async function Write( data ){
