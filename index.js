@@ -137,7 +137,7 @@ function pathConstructor( filePath, data, hash ){
       // replace the p with the data
       p = p.replace( key[0], data[key[1]] );
       // create a new index file or read the index file
-      let indexFile = path.join( paths.join("/"), `${key[1]}-${hash}` );
+      let indexFile = path.join( paths.join("/"), `${key[1]}-${hash}-index` );
       DEBUG( "indexFile:", indexFile );
       let content = [ ];
       if( fs.existsSync( indexFile ) ){
