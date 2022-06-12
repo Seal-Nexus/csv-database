@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+const DEBUG = require( "debug" )( "test:main" );
 const path = require("path");
 const database = require("../index");
-let sample_date = `${Number(new Date("2022-01-01"))}`;
+let sample_date = `${Number(new Date("2022-01-02"))}`;
 let db = new database({
   filePath: "$pid/$date",
   // filePath: "hello/world",
@@ -26,14 +27,15 @@ async function main( ){
     pid, hr, spo2, date
   });
 
-  console.log( "[Write]", write_res );
+  DEBUG( { pid, hr, spo2, date } );
 
-  let search_res = await db.read({ pid, date });
-  
-  console.log( "[Read]", search_res );
+  DEBUG( "[Write]", write_res );
 
-  let search_res_missing_key = await db.read({ pid });
+  // let search_res = await db.read({ pid, date });
+  // DEBUG( "[Read]", search_res.length );
 
+  // let search_res_missing_key = await db.read({ pid });
+  // DEBUG( "[Read multiDE]", search_res_missing_key );
 }
 
 
