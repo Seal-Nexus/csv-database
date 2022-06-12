@@ -143,7 +143,8 @@ function pathConstructor( filePath, data, hash ){
       if( fs.existsSync( indexFile ) ){
         content = fs.readFileSync( indexFile, "utf8" ).split("\n");
       }
-      content.push( data[key[1]] );
+      if( content.indexOf( data[key[1]] ) === -1 )
+        content.push( data[key[1]] );
       fs.writeFileSync( indexFile, content.join("\n") );
     }
     paths.push( p );
@@ -166,7 +167,7 @@ function dataChecking( filed, value ){
     return { error:"data is missing" };
   }
 
-  // Pass the data checking
+    // Pass the data checking
   // if( typeof data !== filed['type'] ){
   //   return { error:"Type is not matching", key };
   // }
