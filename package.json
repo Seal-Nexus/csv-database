@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "DEBUG=* node test/main.js",
-    "clean": "rm -rf test/database/*"
+    "clean": "rm -rf test/database/* && rm -f test/database/.*csv"
   },
   "repository": {
     "type": "git",

@@ -106,4 +106,4 @@ dist
 # testing Database
 *.csv
 database/*
-*-index
+index-*

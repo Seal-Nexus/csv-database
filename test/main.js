@@ -2,7 +2,8 @@
 const DEBUG = require( "debug" )( "test:main" );
 const path = require("path");
 const database = require("../index");
-let sample_date = `${Number(new Date("2022-01-02"))}`;
+const csvdb = require("csv-database");
+let sample_date = `${Number(new Date("2022-01-01"))}`;
 let db = new database({
   filePath: "$pid/$date",
   // filePath: "hello/world",
@@ -21,21 +22,18 @@ let db = new database({
 async function main( ){
   let pid  = "p001",
       hr   = `${~~(Math.random()*30) + 70}`,
-      spo2 = `${~~(Math.random()*5) + 95}`,
+      spo2 =  `${~~(Math.random()*5) + 95}`,
       date = sample_date;
-  let write_res = await db.write({ 
-    pid, hr, spo2, date
-  });
-
+  
+  let write_res = await db.write({ pid, hr, spo2, date });
   DEBUG( { pid, hr, spo2, date } );
-
   DEBUG( "[Write]", write_res );
 
-  // let search_res = await db.read({ pid, date });
-  // DEBUG( "[Read]", search_res.length );
-
-  // let search_res_missing_key = await db.read({ pid });
-  // DEBUG( "[Read multiDE]", search_res_missing_key );
+  let search_res = await db.read({ pid, date });
+  DEBUG( "[Read]", search_res.length );
+  
+  let search_res_missing_key = await db.read({ pid });
+  DEBUG( "[Read multi]", search_res_missing_key );
 }
 
 
