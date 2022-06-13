@@ -15,6 +15,16 @@ function application( params ){
   // PK = Primary Key
   // U  = Unique Key
   // AI = Auto Increment
+  if( fileName === undefined ){
+    throw new Error("fileName is required");
+  }
+  if( standDir === undefined ){
+    throw new Error("standDir is required");
+  }
+  if( fileds === undefined ){
+    throw new Error("fileds is required");
+  }
+
   
   this.fileName    = fileName;
   this.delimiter   = delimiter || ",";
@@ -26,7 +36,7 @@ function application( params ){
   this.inputFileds = fileds;
 
   this.standDir = standDir;
-  this.filePath = filePath;
+  this.filePath = filePath || "";
   this.dbs = new Object( ); // Path: new csv-dataase
 
   this.read   =   Read;
@@ -79,20 +89,17 @@ async function Read( data ){
 
 async function ReadMultiple( stream, data ){
   let { standDir, filePath, indexHash } = this;
-  // replace paths with data
   let filePaths = filePath.replace(/\$[a-zA-Z0-9]+/g, (v)=>{
     return data[v.substr(1)] || v;
   });
   let paths = filePaths.split("/");
   let stack = [ {  root: standDir, path: paths.slice(0), data: Object.assign( {}, data )} ];
   let iter = null;
-  while( stack.length > 0 ){
+  while( stack.length > 0 ){ // DFS
     iter = stack.pop();
     let p   = iter.path.shift( );
-
     if( p !== undefined ){
       let key = p.match(/\$([a-zA-Z0-9]+)/);
-      DEBUG( key, p );
       if( key ){
         let indexFile = path.join( iter.root, `index-${key[1]}-${indexHash}` );
         let content = fs.readFileSync( indexFile, "utf8" ).split("\n");
@@ -102,7 +109,6 @@ async function ReadMultiple( stream, data ){
             path: iter.path.slice(0),
             data: Object.assign( {}, iter.data, { [key[1]]: v } )
           } );
-          DEBUG( stack );
         }
       }else{
         iter.root = path.join( iter.root, p );
@@ -111,41 +117,11 @@ async function ReadMultiple( stream, data ){
     }else{
       let db = await this.getdb( iter.data );
       await stream.add( await db.get( iter.data ) );
-      // stream.add( await db.get( iter.data ) );
     }
   }
-  let res = await stream.get( data );
-  fs.unlinkSync( stream.root )
+  let res = await stream.get( data ); // get the temperary file
+  fs.unlinkSync( stream.root ); // remove the temperary file
   return res;
-  // return null;
-}
-async function ReadMultipleRecursive( stream, standDir, filePath, fileName, data, hash ){
-  if( filePath.length === 0 ){
-    // read the file, standDir + fileName
-    // DEBUG( "[Read Multi][write to temp]", standDir, '/', fileName );
-    let db = await this.getdb( data );
-    // using the stream to write the data
-    stream.add( await db.get( data ) );
-    return;
-  }
-
-  // DEBUG( filePath );
-  let p = filePath.shift();
-  // p match $[a-zA-Z0-9]+
-  let key = p.match(/\$([a-zA-Z0-9]+)/);
-  if( key ){
-    let indexFile = path.join( standDir, `index-${key[1]}-${hash}` );
-    let content = fs.readFileSync( indexFile, "utf8" ).split("\n");
-    for( let v of content ){
-      // DEBUG( v );
-      let new_data = new Object( );
-      new_data[ key[1] ] = v;
-      this.readMulti( stream, path.join( standDir, v ), filePath, fileName, Object.assign( data, new_data ), hash );
-    }
-  }else{
-    this.readMulti( stream, path.join( standDir, p ), filePath, fileName, data, hash );
-  }
-  return null ;
 }
 
 async function Write( data ){
@@ -173,12 +149,46 @@ async function Write( data ){
   }
 }
 
-async function Update( ){
+async function Update( predicate, data ){
+  let { filedKeys, fileds } = this;
+  let db = null;
 
+  try{
+    for(let key of filedKeys ){
+      let d     =   data[key];
+      let filed = fileds[key];
+
+      // vaild data checking 
+      let dataCheckResult = dataChecking( filed, d );
+      if( dataCheckResult.error ){
+        return dataCheckResult;
+      }
+      if( dataCheckResult.value !== undefined )
+        data[key] = dataCheckResult.value;
+
+      // DEBUG( '[Update test]', data );
+      
+    }
+    db = await this.getdb( data );
+    DEBUG( data );
+    await db.edit( predicate, data );
+    return { message:"ok" };
+  }catch(e){
+    return { error:e, message: e.message };
+  }
 }
 
-async function Delete( ){
+async function Delete( predicate ){
+  let { filedKeys, fileds } = this;
+  let db = null;
 
+  try{
+    db = await this.getdb( predicate );
+    await db.delete( predicate );
+    return { message:"ok" };
+  }catch(e){
+    return { error:e, message: e.message };
+  }
 }
 
 async function getdb( data ){

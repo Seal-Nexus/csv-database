@@ -34,6 +34,9 @@ async function main( ){
   
   let search_res_missing_key = await db.read({ pid });
   DEBUG( "[Read multi]", search_res_missing_key );
+
+  let search_res_missing_key_2 = await db.read({ });
+  DEBUG( "[Read multi]", search_res_missing_key_2 );
 }
 
 
