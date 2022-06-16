@@ -124,10 +124,12 @@ async function ReadMultiple( stream, data ){
   return res;
 }
 
-async function Write( data ){
+async function Write( data, substitute ){
   let { filedKeys, fileds } = this;
   let db = null;
-
+  
+  substitute = substitute || { };
+  
   try{
     for(let key of filedKeys ){
       let d     =   data[key];
@@ -135,13 +137,25 @@ async function Write( data ){
 
       // vaild data checking 
       let dataCheckResult = dataChecking( filed, d );
+      // Issues: substitute[key] require to check or not
       if( dataCheckResult.error ){
         return dataCheckResult;
       }
       data[key] = dataCheckResult.value;
     }
+    let keysCount = Object.keys( data ).length;
+    if( filedKeys.length !== keysCount ){
+      return { error: "key are missing or extra" };
+    }
+    
     // DEBUG( '[Write test]', data );
-    db = await this.getdb( data );
+    // with data merge with substitute, require to check the rules.
+    let subtituteData = new Object( );
+    for( let key in data ){
+      subtituteData[key] = substitute[key] || data[key];
+    }
+    console.log( subtituteData );
+    db = await this.getdb( subtituteData );
     await db.add( data );
     return { message:"ok" };
   }catch(e){
@@ -178,12 +192,12 @@ async function Update( predicate, data ){
   }
 }
 
-async function Delete( predicate ){
+async function Delete( predicate, data ){
   let { filedKeys, fileds } = this;
   let db = null;
 
   try{
-    db = await this.getdb( predicate );
+    db = await this.getdb( data );
     await db.delete( predicate );
     return { message:"ok" };
   }catch(e){
@@ -246,6 +260,8 @@ function pathConstructor( filePath, data, hash ){
 }
 
 function dataChecking( filed, value ){
+  if( filed === undefined )
+    return { error: "non-defineing filed" };
   if( value === undefined ){
     value = autofillValue( filed );
   }

@@ -75,6 +75,9 @@ typings/
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 
+# vim cache
+*.sw*
+
 # Next.js build output
 .next
 
