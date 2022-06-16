@@ -54,17 +54,21 @@ function application( params ){
   }
 }
 
-async function Read( data ){
+async function Read( data, substitute ){
+  // Not the best solution
   data = data || { };
+  substitute = substitute || { };
   // data is only the fileds are needed.
   let { filePattern } = this;
   let db = null;
+  DEBUG( data, substitute );
   let missingKeys = new Array( );
   for( let key of filePattern ){
-    if( data[key.substr(1)] === undefined ){
+    if( data[key.substr(1)] === undefined && substitute[key.substr(1)] === undefined ){
       missingKeys.push( key );
     }
   }
+  DEBUG( "[Read][Missing key]", missingKeys );
   
   if( missingKeys.length > 0 ){
     // create a fs write stream
@@ -75,15 +79,18 @@ async function Read( data ){
 
     // replace filePath with data
     filePath = filePath.replace(/\$[a-zA-Z0-9]+/g, (v)=>{
-      return data[v.substr(1)] || v;
+      let k = v.substr(1);
+      DEBUG( "[Read][Replace Path]", k, data[k], substitute[k] );
+      return substitute[k] || data[k] || v;
     });
-    // set stream to utf8
+
     stream.root = tempFile;
     return this.readMulti( stream, data );
     // return {error: "missing key", key: missingKeys};
   }
-
-  db = await this.getdb( data );
+  // Now, it's can do it better
+  let mergedData = Object.assign( {}, data, substitute ); // require data checking
+  db = await this.getdb( mergedData ); // somebug here
   return (await db.get( data ));
 }
 
@@ -154,7 +161,7 @@ async function Write( data, substitute ){
     for( let key in data ){
       subtituteData[key] = substitute[key] || data[key];
     }
-    console.log( subtituteData );
+
     db = await this.getdb( subtituteData );
     await db.add( data );
     return { message:"ok" };
@@ -218,8 +225,12 @@ async function getdb( data ){
     let db = this.dbs[dbFile];
     // DEBUG( '[db path]', dbFile );
     if( db === undefined ){
+      DEBUG( "new db" );
       db = await csvdb( dbFile, fileds, delimiter );
       this.dbs[dbFile] = db;
+
+      DEBUG( this.dbs );
+      DEBUG( dbFile );
     }
     return db;
   }catch(e){

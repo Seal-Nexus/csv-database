@@ -21,14 +21,14 @@ async function main( ){
       hr   = `${~~(Math.random()*30) + 70}`,
       spo2 =  `${~~(Math.random()*5) + 95}`,
       date = "2022-01-01";
-  
-  let write_res = await db.write({ pid, hr, spo2, date: Number(new Date(date)) }, { date });
-  console.log( { pid, hr, spo2, date } );
-  console.log( "[Write]", write_res );
+  for(let i = 0 ; i < 1 ; i++){
+    let write_res = await db.write({ pid, hr, spo2, date: Number(new Date(date)) }, { date });
+    //console.log( { pid, hr, spo2, date } );
+    console.log( "[Write]", write_res );
 
-  let search_res = await db.read({ pid, date });
-  console.log( "[Read]", search_res.length );
-  
+    let search_res = await db.read(undefined, { pid, date });
+    console.log( "[Read]", search_res );
+  }
 }
 
 
